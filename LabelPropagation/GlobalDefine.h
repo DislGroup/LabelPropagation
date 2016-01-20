@@ -28,6 +28,8 @@ int upGraphCuts(unsigned char* yImg,unsigned char * labelMap,const int H,const i
 void gaussianFilter(unsigned char* yImg,int H,int W);
 void gaussianFilterSSE(unsigned char* yImg,int H,int W);
 int upOpticalFlow(Mat &iImg,Mat &pImg,unsigned char *iLabelMap,unsigned char *pLabelMap);
+
+//P-thread Running function 
 void* Function_t(void* Param);
 
 // Parameter For Frame

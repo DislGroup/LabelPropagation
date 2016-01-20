@@ -31,6 +31,5 @@ void* Function_t(void* Param)
 	
 	//Test
 	//cout<<"End"<<endl;
-	//cout<<groundLabel<<" "<<labelNum<<endl;
 	return 0;
 }

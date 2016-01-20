@@ -4,6 +4,7 @@
 //#include <opencv2/highgui/highgui.hpp>
 using namespace cv;
 
+//Parameter for Optical-Flow
 const double pyrScale = 0.5;
 const int levels = 3;
 const int winsize = 15;
