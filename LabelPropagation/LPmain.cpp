@@ -218,6 +218,6 @@ void framePram::initData(int H,int W)
 	this->labelMap = this->yImg + H*W;
 	for(int i=0;i<H;i++)
 		for(int j=0;j<W;j++)
-			this->labelMap[i*H+j] = 0;
+			this->labelMap[i*W+j] = 0;
 	this->cvGray.create(H,W,CV_8UC(1));
 }
