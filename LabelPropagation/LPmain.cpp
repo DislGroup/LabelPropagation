@@ -1,16 +1,22 @@
 // Edit by Disl 2015.12
 #include "GlobalDefine.h"
 
-const char *fileName = "./data/kitchen.yuv";
-const char *keyMapName   = "./data/kitchenlabel.mat";
+const char *fileName = "./data/bookstore.yuv";
+const char *keyMapName   = "./data/bookstorelabel.mat";
 const char *colorTableName = "./data/colortable.mat";
 
 //kitchen 13 conference 6 bookstore 3
-const int labelNum = 13;
+const int labelNum = 3;
 const int groundLabel=20;
 //Sequence Parameter
 const int frameNum = 30;
-const int gopNum = 15;
+const int gopNum = 30;
+
+//P-thread
+const int activeThreadNum = 15;
+int finishFrame;
+pthread_cond_t   cFinish, cHungry;
+pthread_mutex_t  mtxMaster,mtxRun;
 
 int main()
 {
@@ -136,6 +142,10 @@ int main()
 	pthread_attr_setschedpolicy(&attr,SCHED_FIFO);
 	threadPram paramArray[gopNum];
 	pthread_t pid[gopNum];
+	pthread_mutex_init(&mtxRun, NULL);
+	pthread_mutex_init(&mtxMaster, NULL);
+	pthread_cond_init(&cFinish, NULL);
+	pthread_cond_init(&cHungry, NULL);
 	//Index pointer
 	int pointerI=0;
 	int k=1;
@@ -144,6 +154,7 @@ int main()
 	time_start = clock();
 	while(k<frameNum)
 	{
+		/*
 		//k is index for Frame k+1
 		//range : [ k , min(frameNum,k+gopNum) )
 		rightBound = frameNum<k+gopNum ? frameNum : k+gopNum ;
@@ -161,6 +172,40 @@ int main()
 		//wait all over
 		for(int j=0;j<rightBound-k;j++)
 			pthread_join(pid[j],NULL);
+		*/
+
+		int j=0;
+		rightBound = frameNum-k < gopNum ? frameNum-k : gopNum;
+		finishFrame = rightBound;
+
+		for(;j<activeThreadNum && j<rightBound;j++)
+		{
+			paramArray[j].index=k+j+1;
+			paramArray[j].H=fileH;
+			paramArray[j].W=fileW;
+			paramArray[j].frameI = & (framePramArray[pointerI]);
+			paramArray[j].frameP = & (framePramArray[k+j]);
+			//Create Thread
+			pthread_create(&(pid[j]),&attr,Function_t,&(paramArray[j]));
+		}
+		while(j<rightBound)
+		{
+			pthread_mutex_lock(&mtxRun);
+			pthread_cond_wait(&cHungry, &mtxRun);
+			pthread_mutex_unlock(&mtxRun);
+			paramArray[j].index=k+j+1;
+			paramArray[j].H=fileH;
+			paramArray[j].W=fileW;
+			paramArray[j].frameI = & (framePramArray[pointerI]);
+			paramArray[j].frameP = & (framePramArray[k+j]);
+			//Create Thread
+			pthread_create(&(pid[j]),&attr,Function_t,&(paramArray[j]));
+			j++;
+		}
+		pthread_mutex_lock(&mtxMaster);
+		if(finishFrame!=0)
+			pthread_cond_wait(&cFinish, &mtxMaster);
+		pthread_mutex_unlock(&mtxMaster);
 		k+=gopNum;
 		pointerI=k-1;
 	}
@@ -176,7 +221,7 @@ int main()
 
 	for(int i=1;i<frameNum;i++)
 	{
-		sprintf(resultLabelMapName,"./data/kitchen_%d.mat",i+1);	
+		sprintf(resultLabelMapName,"./data/kitchen_%d.mat",i+1);
 		pOutMatFile = matOpen(resultLabelMapName,"w");
 		if(!pOutMatFile)
 		{
@@ -202,6 +247,10 @@ int main()
 	delete []Uarray;
 	delete []Varray;
 
+	pthread_mutex_destroy(&mtxRun);
+	pthread_mutex_destroy(&mtxMaster);
+	pthread_cond_destroy(&cHungry);
+	pthread_cond_destroy(&cFinish);
 	pthread_attr_destroy(&attr);
 	yuvFile.close();
 	matClose(pColorTableFile);

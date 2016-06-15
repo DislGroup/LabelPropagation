@@ -28,7 +28,17 @@ void* Function_t(void* Param)
 		cout<<"Frame"<<it->index<<" Graph Cuts Error!"<<endl;
 		return 0;
 	}
-	
+
+	pthread_mutex_lock(&mtxMaster);
+	finishFrame--;
+	if(finishFrame == 0)
+		pthread_cond_signal(&cFinish);
+	pthread_mutex_unlock(&mtxMaster);
+
+	pthread_mutex_lock(&mtxRun);
+	pthread_cond_signal(&cHungry);
+	pthread_mutex_unlock(&mtxRun);
+
 	//Test
 	//cout<<"End"<<endl;
 	return 0;

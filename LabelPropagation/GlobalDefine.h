@@ -22,6 +22,13 @@ using namespace cv;
 extern const int labelNum ;
 extern const int groundLabel ;
 
+//P-thread
+extern pthread_cond_t  cFinish;
+extern pthread_cond_t  cHungry;
+extern pthread_mutex_t  mtxMaster;
+extern pthread_mutex_t  mtxRun;
+extern int finishFrame;
+
 //global Function
 void fillBlank(unsigned char *labelMap,unsigned char* yImg,int H,int W);
 int upGraphCuts(unsigned char* yImg,unsigned char * labelMap,const int H,const int W,const int totalLabel,const int usedLabel);
